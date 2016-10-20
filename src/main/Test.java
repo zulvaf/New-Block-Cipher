@@ -8,7 +8,10 @@ import utils.*;
 public class Test {
 	public static void main(String[] args) {
 		//long a = -4;
-		
+		String s = "halo halo";
+		byte[] bytes = s.getBytes();
+		String s2 = new String(bytes);
+		System.out.println(s2);
 		//String s = "abcdef";
 		//System.out.println(s.substring(0, 6));
 		/*
@@ -28,7 +31,7 @@ public class Test {
 		}
 		
 		MyCipher mc = new MyCipher(100);
-		byte[] b = mc.encryptBlock(text, key);
+		byte[] b = mc.encrypt(text, key);
 		
 		for(int i = 0; i < b.length; i++) {
 			System.out.print(text[i] + " ");
@@ -39,7 +42,7 @@ public class Test {
 		}
 		System.out.println();
 		
-		byte[] c = mc.decryptBlock(b, key);
+		byte[] c = mc.decrypt(b, key);
 		for(int i = 0; i < b.length; i++) {
 			System.out.print(c[i] + " ");
 		}

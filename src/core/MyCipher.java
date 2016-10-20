@@ -1,5 +1,6 @@
 package core;
 
+import java.nio.ByteBuffer;
 import java.util.Random;
 
 import utils.BitMatrix;
@@ -15,7 +16,32 @@ public class MyCipher {
 	public MyCipher(int seed) {
 		createSBox(seed);
 	}
+	public byte[] encrypt(byte[] text, byte[] key) {
+		byte[] newText = completeBlock(text);
+		byte[] newKey = completeKey(key);
+		
+		byte[][] blocks = bytesToBlocks(text,16);
+		ByteBuffer buffer = ByteBuffer.allocate(newText.length);
+		for(int i = 0; i < blocks.length; i++) {
+			byte[] encBlock = encryptBlock(blocks[i], newKey);
+			buffer.put(encBlock);
+		}
+		return buffer.array();
+		
+	}
 	
+	public byte[] decrypt(byte[] text, byte[] key) {
+		byte[] newKey = completeKey(key);
+		byte[] newText = completeBlock(text);
+		
+		byte[][] blocks = bytesToBlocks(text,16);
+		ByteBuffer buffer = ByteBuffer.allocate(newText.length);
+		for(int i = 0; i < blocks.length; i++) {
+			byte[] decBlock = decryptBlock(blocks[i], newKey);
+			buffer.put(decBlock);
+		}
+		return buffer.array();
+	}
 	
 	public byte[] encryptBlock(byte[] text, byte[] key) {
 		String skey = BitUtils.getBits(key);
@@ -27,7 +53,7 @@ public class MyCipher {
 		long left = splitBits(stext,1);
 		long right = splitBits(stext,2);
 		
-		for(int i = 0; i < round; i++) {
+		for(int i = 0; i < round-1; i++) {
 			long rightFlip = bm.getFlipLong(right);
 			skey = rotateLeft(skey);
 			long keyComp = compressKey(skey);
@@ -36,7 +62,6 @@ public class MyCipher {
 			left = right;
 			right = temp;
 		}
-		/*
 		//last round
 		long rightFlip = bm.getFlipLong(right);
 		skey = rotateLeft(skey);
@@ -44,7 +69,7 @@ public class MyCipher {
 		long temp = rightFlip ^ keyComp;
 		temp = temp ^ left;
 		left = temp;
-		*/
+		
 		byte[] leftBytes = BitUtils.longToBytes(left);
 		byte[] rightBytes = BitUtils.longToBytes(right);
 		return BitUtils.concatBytes(leftBytes, rightBytes);
@@ -58,22 +83,21 @@ public class MyCipher {
 		
 		long left = splitBits(stext,1);
 		long right = splitBits(stext,2);
-		/*
+		
 		//first round
 		long rightFlip = bm.getFlipLong(right);
-		skey = rotateLeft(skey);
 		long keyComp = compressKey(skey);
 		long temp = rightFlip ^ keyComp;
 		temp = temp ^ left;
 		left = temp;
-		*/
-		for(int i = 0; i < round; i++) {
-			long rightFlip = bm.getFlipLong(right);
+		
+		for(int i = 0; i < round-1; i++) {
 			skey = rotateRight(skey);
-			long keyComp = compressKey(skey);
-			long temp = rightFlip ^ keyComp;
-			temp = temp ^ left;
-			left = right;
+			temp = left;
+			rightFlip = bm.getFlipLong(left);
+			keyComp = compressKey(skey);
+			left = rightFlip ^ keyComp;
+			left = left ^ right;
 			right = temp;
 		}
 
@@ -157,6 +181,45 @@ public class MyCipher {
 		    index += 4;
 		}
 		return BitUtils.bitsToLong(res);
+		
 	}
 	
+	private byte[] completeBlock(byte[] text) {
+		if(text.length % 16 == 0) {
+			return text;
+		} else {
+			int length = (text.length/16 + 1) * 16;
+			byte[] newText = new byte[length];
+			int i;
+			for(i = 0; i < text.length; i++) {
+				newText[i] = text[i];
+			}
+			while(i < newText.length) {
+				newText[i] = 0;
+				i++;
+			}
+			return newText;
+		}
+	}
+	
+	private byte[] completeKey(byte[] key) {
+		if(key.length > 16) {
+			byte[] newKey = new byte[16];
+			for(int i = 0; i < newKey.length; i++) {
+				newKey[i] = key[i];
+			}
+			return newKey;
+		} else {
+			return completeBlock(key);
+		}
+	}
+	
+	private byte[][] bytesToBlocks(byte[] bytes, int size) {
+		int numBlock = bytes.length / size;
+		byte[][] blocks = new byte[numBlock][size];
+		for(int i = 0; i < blocks.length; i++) {
+			System.arraycopy(bytes, i*size, blocks[i], 0, size);
+		}
+		return blocks;
+	}
 }
