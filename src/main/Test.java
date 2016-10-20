@@ -1,50 +1,42 @@
 package main;
-
-import java.nio.ByteBuffer;
-
 import core.MyCipher;
-import utils.*;
-
+import utils.IOFile;
 public class Test {
 	public static void main(String[] args) {
-		//long a = -4;
-		String s = "halo halo";
-		byte[] bytes = s.getBytes();
-		String s2 = new String(bytes);
-		System.out.println(s2);
-		//String s = "abcdef";
-		//System.out.println(s.substring(0, 6));
-		/*
-		String slong = Long.toBinaryString(a);
-		BitMatrix bm = new BitMatrix(slong);
-		long b = BitUtils.bitsToLong(bm.getFlipString());
-		String slong2 = Long.toBinaryString(b);
-		BitMatrix bm2 = new BitMatrix(slong2);
-		long c = BitUtils.bitsToLong(bm2.getFlipString());
-		System.out.println(c);
-		*/
-		byte[] text = new byte[16];
-		byte[] key = new byte[16];
-		for(int i = 0; i < 16; i++) {
-			text[i] = (byte) i;
-			key[i] = (byte) (i + 1);
+		MyCipher mc = new MyCipher();
+		IOFile iofile = new IOFile();
+		String text = iofile.readText("mars.txt");
+		String key = "informatikasteii";
+		byte[] btext = text.getBytes();
+		byte[] bkey = key.getBytes();
+		
+		int[] frtext = new int[256];
+		int[] frres = new int[256];
+		for(int i = 0; i < 256; i++) {
+			frtext[i] = 0;
+			frres[i] = 0;
 		}
 		
-		MyCipher mc = new MyCipher(100);
-		byte[] b = mc.encrypt(text, key);
+		for(int i = 0; i < btext.length; i++) {
+			int idx = (int) btext[i] + 128;
+			frtext[idx] += 1; 
+		}
 		
-		for(int i = 0; i < b.length; i++) {
-			System.out.print(text[i] + " ");
+		byte[] bres = mc.encrypt(btext, bkey);
+		for(int i = 0; i < bres.length; i++) {
+			int idx = (int) bres[i] + 128;
+			frres[idx] += 1; 
 		}
-		System.out.println();
-		for(int i = 0; i < b.length; i++) {
-			System.out.print(b[i] + " ");
-		}
-		System.out.println();
+		String resAnalisis = getResult(frtext,frres);
+		iofile.writeText("result.csv", resAnalisis);
 		
-		byte[] c = mc.decrypt(b, key);
-		for(int i = 0; i < b.length; i++) {
-			System.out.print(c[i] + " ");
+	}
+	
+	public static String getResult(int[] res, int[] res2) {
+		String S = "";
+		for(int i = 0; i < res.length; i++) {
+			S += Integer.toString(res[i]) + ", " + Integer.toString(res2[i]) + "\n";
 		}
+		return S;
 	}
 }

@@ -10,7 +10,7 @@ public class MyCipher {
 	private int[][] sbox;
 	
 	public MyCipher() {
-		createSBox(100);
+		createSBox(5286);
 	}
 	
 	public MyCipher(int seed) {
@@ -19,7 +19,6 @@ public class MyCipher {
 	public byte[] encrypt(byte[] text, byte[] key) {
 		byte[] newText = completeBlock(text);
 		byte[] newKey = completeKey(key);
-		
 		byte[][] blocks = bytesToBlocks(text,16);
 		ByteBuffer buffer = ByteBuffer.allocate(newText.length);
 		for(int i = 0; i < blocks.length; i++) {
@@ -33,7 +32,6 @@ public class MyCipher {
 	public byte[] decrypt(byte[] text, byte[] key) {
 		byte[] newKey = completeKey(key);
 		byte[] newText = completeBlock(text);
-		
 		byte[][] blocks = bytesToBlocks(text,16);
 		ByteBuffer buffer = ByteBuffer.allocate(newText.length);
 		for(int i = 0; i < blocks.length; i++) {
@@ -116,7 +114,7 @@ public class MyCipher {
 		return res;
 	}
 	
-	public void createSBox(int seed) {
+	public void createSBox(long seed) {
 		Random rand = new Random(seed);
 		sbox = new int[4][4];
 		for(int i = 0; i < sbox.length; i++) {
@@ -128,6 +126,11 @@ public class MyCipher {
 				sbox[i][j] = val;
 			}
 		}
+	}
+	
+	public void createSBox(byte[] key) {
+		long seed = compressKey(BitUtils.getBits(key));
+		createSBox(seed);
 	}
 	
 	private long splitBits(String bits, int pos) {
